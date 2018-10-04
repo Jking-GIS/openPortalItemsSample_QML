@@ -1,4 +1,0 @@
-[CloudMake]
-notifications=normal
-targetWin32=true
-targetWin64=true
