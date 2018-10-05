@@ -1,5 +1,5 @@
 import QtQuick 2.7
-import QtQuick.Controls 1.4
+import QtQuick.Controls 2.4
 import QtPositioning 5.3
 import QtSensors 5.3
 import QtQuick.Controls.Styles 1.4
@@ -39,15 +39,24 @@ Rectangle {
 
         TextField {
             id: txtSearch
-            height: parent.height - 5 * app.scaleFactor
+            //height: parent.height - 10 * app.scaleFactor
             width: parent.width - imgClear.width - searchIcon.width - (43 * app.scaleFactor)
             font.pixelSize: 20 * app.scaleFactor
             placeholderText: "Search"
             Material.accent: "#8A000000"
             verticalAlignment: TextInput.AlignVCenter
+            horizontalAlignment: TextInput.AlignLeft
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: searchIcon.right
             anchors.leftMargin: 10 * app.scaleFactor
+            padding: 10 * app.scaleFactor
+
+            background: Rectangle {
+                anchors.fill: parent
+                anchors.topMargin: 2 * app.scaleFactor
+                anchors.bottomMargin: 4 * app.scaleFactor
+                radius: 5 * app.scaleFactor
+            }
 
             onLengthChanged: {
                 if (length > 0) {
@@ -67,7 +76,7 @@ Rectangle {
             visible: txtSearch.length > 0
             anchors {
                 right: parent.right
-                rightMargin: 20 * app.scaleFactor
+                rightMargin: 10 * app.scaleFactor
                 verticalCenter: parent.verticalCenter
             }
 
@@ -75,7 +84,6 @@ Rectangle {
                 anchors.fill: parent
                 onClicked: {
                     txtSearch.text = ""
-                    listModelFieldsSearch.clear()
                 }
             }
         }
@@ -89,6 +97,10 @@ Rectangle {
         anchors.top: rectSearch.bottom
         anchors.bottom: parent.bottom
         width: parent.width
+
+        ScrollBar.vertical: ScrollBar {
+            active: true
+        }
 
         spacing: 5 * app.scaleFactor
 
@@ -134,8 +146,6 @@ Rectangle {
             searchString: txtSearch.text
 
             onSearchStringChanged: {
-                console.log("String changed!!! " + itemType)
-                console.log("type: " + itemType)
                 myPortal.findItems(portalQuery)
             }
         }
@@ -151,11 +161,9 @@ Rectangle {
             onFindItemsResultChanged: {
                 var loadStatus = myPortal.loadStatus
                 var result = myPortal.findItemsResult
-                console.log("huh??")
                 if(loadStatus === Enums.LoadStatusLoaded && //if portal is loaded
                         result && //and we have a valid query result
                         result.queryParameters.types[0] === itemType) { //and this is the valid list
-                    console.log("test!!! " + itemType)
                     portalItemModel = result.itemResults //fill the model with results
                 }
             }
