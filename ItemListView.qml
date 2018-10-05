@@ -1,70 +1,169 @@
-import QtQuick 2.0
+import QtQuick 2.7
+import QtQuick.Controls 1.4
+import QtPositioning 5.3
+import QtSensors 5.3
+import QtQuick.Controls.Styles 1.4
+import QtQuick.Controls.Material 2.1
+import QtGraphicalEffects 1.0
 
+import ArcGIS.AppFramework 1.0
+import ArcGIS.AppFramework.Controls 1.0
 import Esri.ArcGISRuntime 100.2
 
-//list view for tabs of portal items
-ListView {
-    id: portalItemsList
-
+Rectangle {
     property var itemType: null
     property string itemUrl: "http://ps-dbs.maps.arcgis.com/home/item.html?id=" //default item url
     property PortalItemListModel portalItemModel: null
+    color: "#323232"
 
-    anchors.fill: parent
+    //search bar
+    Rectangle {
+        id: rectSearch
+        anchors.top: parent.top
+        height: 50 * app.scaleFactor
+        width: parent.width
+        color: "#323232"
 
-    spacing: 5
+        Image {
+            id: searchIcon
+            height: parent.height/2
+            width: height
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.leftMargin: 10 * app.scaleFactor
 
-    model: portalItemModel
+            source: "./images/search.png"
+            mipmap: true
+            fillMode: Image.PreserveAspectFit
+        }
 
-    //represents the UI for EACH item in the list
-    delegate: Rectangle {
-        color: "white"
-        border.color: "darkgrey"
-        height: 50
+        TextField {
+            id: txtSearch
+            height: parent.height - 5 * app.scaleFactor
+            width: parent.width - imgClear.width - searchIcon.width - (43 * app.scaleFactor)
+            font.pixelSize: 20 * app.scaleFactor
+            placeholderText: "Search"
+            Material.accent: "#8A000000"
+            verticalAlignment: TextInput.AlignVCenter
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: searchIcon.right
+            anchors.leftMargin: 10 * app.scaleFactor
+
+            onLengthChanged: {
+                if (length > 0) {
+
+                } else {
+
+                }
+            }
+        }
+
+        Image {
+            id: imgClear
+            source: "./images/clear_text.png"
+            mipmap: true
+            width: 25 * app.scaleFactor
+            height: 25 * app.scaleFactor
+            visible: txtSearch.length > 0
+            anchors {
+                right: parent.right
+                rightMargin: 20 * app.scaleFactor
+                verticalCenter: parent.verticalCenter
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    txtSearch.text = ""
+                    listModelFieldsSearch.clear()
+                }
+            }
+        }
+    }
+
+    //list view for tabs of portal items
+    ListView {
+        id: portalItemsList
+
+        anchors.topMargin: 50 * app.scaleFactor
+        anchors.top: rectSearch.bottom
+        anchors.bottom: parent.bottom
         width: parent.width
 
-        Text {
-            text: title ? title : itemType
-            font.pixelSize: 20
-        }
+        spacing: 5 * app.scaleFactor
 
-        MouseArea {
-            anchors.fill: parent
-            onPressed: {
-                color = "darkgrey"
+        model: portalItemModel
+
+        //represents the UI for EACH item in the list
+        delegate: Rectangle {
+            color: "white"
+            border.color: "darkgrey"
+            height: 50 * app.scaleFactor
+            width: parent.width
+            radius: 2 * app.scaleFactor
+
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 20 * app.scaleFactor
+                width: parent.width - anchors.leftMargin*2
+                text: title ? title : itemType
+                font.pixelSize: 20 * app.scaleFactor
+                elide: Text.ElideRight
             }
-            onReleased: {
-                color = "white"
-                Qt.openUrlExternally(itemUrl + itemId) //open the URL in your default browser
-            }
-        }
-    }
 
-    //change parameters for the query on portal items
-    PortalQueryParametersForItems {
-        id: portalQuery
-        types: [itemType]
-        limit: 100
-    }
-
-    Connections {
-        target: myPortal
-
-        //fill default tab when portal is loaded
-        onLoadStatusChanged: {
-            myPortal.findItems(portalQuery)
-        }
-
-        onFindItemsResultChanged: {
-            if(myPortal.loadStatus === Enums.LoadStatusLoaded && //if portal is loaded
-                    myPortal.findItemsResult && //and we have a valid query result
-                    myPortal.findItemsResult.queryParameters.types[0] === itemType) { //and this is the valid list
-                portalItemModel = myPortal.findItemsResult.itemResults //fill the model with results
+            MouseArea {
+                anchors.fill: parent
+                onPressed: {
+                    color = "darkgrey"
+                }
+                onReleased: {
+                    color = "white"
+                    Qt.openUrlExternally(itemUrl + itemId) //open the URL in your default browser
+                }
             }
         }
+
+        //change parameters for the query on portal items
+        PortalQueryParametersForItems {
+            id: portalQuery
+            types: [itemType]
+            limit: 100
+
+            searchString: txtSearch.text
+
+            onSearchStringChanged: {
+                console.log("String changed!!! " + itemType)
+                console.log("type: " + itemType)
+                myPortal.findItems(portalQuery)
+            }
+        }
+
+        Connections {
+            target: myPortal
+
+            //fill default tab when portal is loaded
+            onLoadStatusChanged: {
+                myPortal.findItems(portalQuery)
+            }
+
+            onFindItemsResultChanged: {
+                var loadStatus = myPortal.loadStatus
+                var result = myPortal.findItemsResult
+                console.log("huh??")
+                if(loadStatus === Enums.LoadStatusLoaded && //if portal is loaded
+                        result && //and we have a valid query result
+                        result.queryParameters.types[0] === itemType) { //and this is the valid list
+                    console.log("test!!! " + itemType)
+                    portalItemModel = result.itemResults //fill the model with results
+                }
+            }
+        }
+
+        Component.onCompleted: { //When we move to the tab for the first time, fill the tab
+            myPortal.findItems(portalQuery);
+        }
     }
 
-    Component.onCompleted: { //When we move to the tab for the first time, fill the tab
-        myPortal.findItems(portalQuery);
-    }
 }

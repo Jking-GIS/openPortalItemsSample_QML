@@ -2,3 +2,12 @@
 notifications=normal
 targetWin32=true
 targetWin64=true
+
+[IOS]
+distributionMethod=development
+
+[MacOS]
+signApp=false
+
+[Windows]
+signApp=false

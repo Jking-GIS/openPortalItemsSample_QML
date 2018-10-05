@@ -21,13 +21,13 @@
 // automatically indent the entirety of the .qml file.
 
 
-import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick 2.7
 import QtQuick.Controls 1.4
-import QtQuick.Layouts 1.1
 import QtPositioning 5.3
 import QtSensors 5.3
 import QtQuick.Controls.Styles 1.4
+import QtQuick.Controls.Material 2.1
+import QtGraphicalEffects 1.0
 
 import ArcGIS.AppFramework 1.0
 import ArcGIS.AppFramework.Controls 1.0
@@ -42,7 +42,11 @@ App {
     height: 736
 
     property real scaleFactor: AppFramework.displayScaleFactor
-    property string portalUrl: "http://ps-dbs.maps.arcgis.com/"
+
+    readonly property string portalUrl: "http://ps-dbs.maps.arcgis.com/"
+    readonly property string webMapUrlExtend: "home/webmap/viewer.html?webmap="
+    readonly property string generalUrlExtend: "home/item.html?id="
+    readonly property string surveyUrl: "https://survey123.arcgis.com/share/"
 
     //header bar
     Rectangle {
@@ -54,8 +58,8 @@ App {
             top: parent.top
         }
 
-        height: 50 * AppFramework.displayScaleFactor
-        color: app.info.propertyValue("titleBackgroundColor", "lightgrey")
+        height: 50 * app.scaleFactor
+        color: app.info.propertyValue("titleBackgroundColor", "purple")
 
         Text {
             id: titleText
@@ -101,10 +105,8 @@ App {
         Tab {
             title: "Web Map"
             ItemListView {
-                anchors.topMargin: 50
-
                 itemType: Enums.PortalItemTypeWebMap
-                itemUrl: "http://ps-dbs.maps.arcgis.com/home/webmap/viewer.html?webmap=" //go to web map view on portal
+                itemUrl: portalUrl + webMapUrlExtend //go to web map view on portal
             }
         }
 
@@ -112,34 +114,30 @@ App {
         Tab {
             title: "Operation View"
             ItemListView {
-                anchors.topMargin: 50
-
                 itemType: Enums.PortalItemTypeOperationView
-                itemUrl: "http://ps-dbs.maps.arcgis.com/home/item.html?id=" //go to item page on portal
+                itemUrl: portalUrl + generalUrlExtend //go to item page on portal
             }
         }
 
         //layer tab
         Tab {
-            title: "Layer"
+            title: "Survey"
             ItemListView {
-                anchors.topMargin: 50
-
-                itemType: Enums.PortalItemTypeLayer
-                itemUrl: "http://ps-dbs.maps.arcgis.com/home/item.html?id=" //go to item page on portal
+                itemType: Enums.PortalItemTypeForm
+                itemUrl: surveyUrl //go to item page on portal
             }
         }
 
         //change styling of the tab view
         style: TabViewStyle {
-            frameOverlap: 1
+            frameOverlap: 1 * app.scaleFactor
             tab: Rectangle {
                 color: styleData.selected ? "darkgrey" : "#323232"
                 border.color: "black"
-                border.width: 2
-                implicitWidth: tabView.width/3 + 1
-                implicitHeight: 50
-                radius: 2
+                border.width: 2 * app.scaleFactor
+                implicitWidth: tabView.width/tabView.count + 1 * app.scaleFactor
+                implicitHeight: 50 * app.scaleFactor
+                radius: 2 * app.scaleFactor
                 Text {
                     id: text
                     anchors.centerIn: parent
